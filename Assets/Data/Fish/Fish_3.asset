@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a70e56b11c33779499357c2ed05b8bab, type: 3}
+  m_Name: Fish_3
+  m_EditorClassIdentifier: Assembly-CSharp::FishData
+  id: Fish_3
+  displayName: Fish_3
+  sprite: {fileID: -172460223263894923, guid: 0e5f56414d5c14e669bbafd38a45ad7a, type: 3}
+  rarity: 0
+  ability: {fileID: 11400000, guid: 88f389c19e616b947b87b1427f55a1e4, type: 2}
+  unlockType: 0
+  unlockHint: 
+  questType: 0
+  questTarget: 0

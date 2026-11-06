@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a70e56b11c33779499357c2ed05b8bab, type: 3}
+  m_Name: Fish_8
+  m_EditorClassIdentifier: Assembly-CSharp::FishData
+  id: Fish_8
+  displayName: Fish_8
+  sprite: {fileID: -4263315234395986307, guid: 94b3bd9286d130c46a70080bf321205a, type: 3}
+  rarity: 1
+  ability: {fileID: 11400000, guid: b083c43a1592dd3458f920bc8e492e64, type: 2}
+  unlockType: 1
+  unlockHint: "\u0E23\u0E27\u0E21\u0E23\u0E48\u0E32\u0E07\u0E2A\u0E30\u0E2A\u0E21
+    150 \u0E04\u0E23\u0E31\u0E49\u0E07"
+  questType: 1
+  questTarget: 150
