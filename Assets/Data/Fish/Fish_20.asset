@@ -13,11 +13,14 @@ MonoBehaviour:
   m_Name: Fish_20
   m_EditorClassIdentifier: Assembly-CSharp::FishData
   id: Fish_20
-  displayName: Fish_20
-  sprite: {fileID: 5278781536924358705, guid: 6fa6673c15e05410da95cebffbeba0a5, type: 3}
+  displayName: Whale Shark
+  sprite: {fileID: 21300000, guid: 6be8cf5ba1584f35bf838646cad52a4e, type: 3}
   rarity: 3
-  ability: {fileID: 11400000, guid: b083c43a1592dd3458f920bc8e492e64, type: 2}
+  ability: {fileID: 11400000, guid: 78773afd52de4edb93c7cc9bbea48a4e, type: 2}
   unlockType: 2
   unlockHint: 
   questType: 0
   questTarget: 0
+  layer: 7
+  hitboxRadius: 0.3421
+  hitboxOffset: {x: 0.0116, y: 0.0155}

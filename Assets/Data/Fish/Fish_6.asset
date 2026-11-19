@@ -13,11 +13,14 @@ MonoBehaviour:
   m_Name: Fish_6
   m_EditorClassIdentifier: Assembly-CSharp::FishData
   id: Fish_6
-  displayName: Fish_6
-  sprite: {fileID: 163732279685670682, guid: 94b3bd9286d130c46a70080bf321205a, type: 3}
+  displayName: Jellyfish
+  sprite: {fileID: 21300000, guid: e6bf2425f74f438698d6b71caba25917, type: 3}
   rarity: 1
-  ability: {fileID: 11400000, guid: b083c43a1592dd3458f920bc8e492e64, type: 2}
+  ability: {fileID: 0}
   unlockType: 0
   unlockHint: 
   questType: 0
   questTarget: 0
+  layer: 6
+  hitboxRadius: 0.3158
+  hitboxOffset: {x: -0.0074, y: 0.0103}

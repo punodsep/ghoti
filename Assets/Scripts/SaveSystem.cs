@@ -80,28 +80,47 @@ public static class SaveSystem
 
         p.unlockedFishIds.RemoveAll(id => db.Get(id) == null);
 
-        HashSet<string> seen = new HashSet<string>();
-        p.deckFishIds.RemoveAll(id =>
-            db.Get(id) == null || !p.IsUnlocked(id) || !seen.Add(id));
+        // Deck: ช่องที่ i = layer i+1 และต้องเป็นปลาของ layer นั้นที่ปลดล็อกแล้ว
+        // ช่องว่างเก็บเป็น "" — เซฟเก่า (ก่อนมีช่องว่าง) หรือโปรไฟล์ใหม่ เติมปลาเริ่มต้นให้
+        List<string> previous = new List<string>(p.deckFishIds);
+        bool fillMissing = p.version < 2 || previous.Count == 0;
+        p.deckFishIds.Clear();
 
-        if (p.deckFishIds.Count > GameSession.MaxDeck)
+        for (int layer = 1; layer <= GameSession.MaxDeck; layer++)
         {
-            p.deckFishIds.RemoveRange(
-                GameSession.MaxDeck, p.deckFishIds.Count - GameSession.MaxDeck);
-        }
-
-        if (p.deckFishIds.Count < GameSession.MinDeck)
-        {
-            foreach (FishData f in db.allFish)
+            string pick = previous.Find(id =>
             {
-                if (p.deckFishIds.Count >= GameSession.MaxDeck) break;
+                FishData f = db.Get(id);
+                return f != null && f.layer == layer && p.IsUnlocked(id);
+            });
 
-                if (f != null && p.IsUnlocked(f.id) && !p.deckFishIds.Contains(f.id))
-                {
-                    p.deckFishIds.Add(f.id);
-                }
-            }
+            if (pick == null && fillMissing) pick = DefaultForLayer(db, p, layer);
+            p.deckFishIds.Add(pick ?? "");
         }
+
+        p.version = 2;
+    }
+
+    /// ล้าง Deck ทุกช่อง (ว่างทั้ง 7 layer) แล้วเซฟ
+    public static void ClearDeck()
+    {
+        PlayerProfile p = Profile;
+        p.deckFishIds.Clear();
+        for (int layer = 1; layer <= GameSession.MaxDeck; layer++) p.deckFishIds.Add("");
+        Save();
+    }
+
+    /// ปลาสำหรับ layer ที่ว่าง: ปลา Default ก่อน แล้วค่อยตัวอื่นที่ปลดล็อกแล้ว
+    private static string DefaultForLayer(FishDatabase db, PlayerProfile p, int layer)
+    {
+        string fallback = null;
+        foreach (FishData f in db.allFish)
+        {
+            if (f == null || f.layer != layer || !p.IsUnlocked(f.id)) continue;
+            if (f.unlockType == UnlockType.Default) return f.id;
+            if (fallback == null) fallback = f.id;
+        }
+        return fallback;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]

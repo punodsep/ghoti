@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -23,4 +24,17 @@ public static class SaveTools
     {
         EditorUtility.RevealInFinder(Application.persistentDataPath);
     }
+
+    [MenuItem("Tools/Fish/Unlock All Fish (debug)")]
+    private static void UnlockAll()
+    {
+        int count = 0;
+        foreach (FishData fish in FishDatabase.Instance.allFish)
+        {
+            if (fish != null && SaveSystem.Profile.Unlock(fish.id)) count++;
+        }
+        SaveSystem.Save();
+        Debug.Log($"ปลดล็อกปลาเพิ่ม {count} ตัว (ทั้งหมด {SaveSystem.Profile.unlockedFishIds.Count})");
+    }
 }
+#endif

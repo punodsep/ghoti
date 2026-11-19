@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 878f1d18e4454176acd577e58eecf807, type: 3}
+  m_Name: Ability_TidalWave
+  m_EditorClassIdentifier: Assembly-CSharp::TidalWaveAbility
+  abilityName: "Tidal Wave"
+  description: "When created by a merge, a big wave pushes every fish down, away from the danger line."
+  impulse: 7
+  sidewaysRatio: 0.35
+  extraForHigherFish: 0.75
+  heightForMaxExtra: 4

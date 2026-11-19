@@ -13,11 +13,14 @@ MonoBehaviour:
   m_Name: Fish_15
   m_EditorClassIdentifier: Assembly-CSharp::FishData
   id: Fish_15
-  displayName: Fish_15
-  sprite: {fileID: 5278781536924358705, guid: 6fa6673c15e05410da95cebffbeba0a5, type: 3}
+  displayName: Betta
+  sprite: {fileID: 21300000, guid: 29bb706fd16c4ad8b4d537384edce0fe, type: 3}
   rarity: 1
-  ability: {fileID: 11400000, guid: b083c43a1592dd3458f920bc8e492e64, type: 2}
+  ability: {fileID: 11400000, guid: 62158c81d5db402ea2ed4c2814676d6a, type: 2}
   unlockType: 2
   unlockHint: 
   questType: 0
   questTarget: 0
+  layer: 5
+  hitboxRadius: 0.3304
+  hitboxOffset: {x: -0.0956, y: -0.0028}

@@ -13,7 +13,7 @@ public static class ProgressService
     private const int ScorePerCoin = 30;
 
     /// เรียกครั้งเดียวตอนจบเกม: อัปเดตสถิติ, แจกเหรียญ, ตรวจเควสต์, เซฟ
-    public static GameResult RecordGame(int score, int merges, int topMerges)
+    public static GameResult RecordGame(int score, int merges, int topMerges, int bonusCoins = 0)
     {
         PlayerProfile p = SaveSystem.Profile;
         GameResult result = new GameResult();
@@ -28,7 +28,7 @@ public static class ProgressService
             result.newBest = true;
         }
 
-        result.coinsEarned = Mathf.Max(1, score / ScorePerCoin);
+        result.coinsEarned = Mathf.Max(1, score / ScorePerCoin) + Mathf.Max(0, bonusCoins);
         p.coins += result.coinsEarned;
 
         result.newlyUnlocked = CheckUnlocks();

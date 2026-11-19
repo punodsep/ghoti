@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7981a591db0a434e8053d2bb076d0f3d, type: 3}
+  m_Name: Ability_Pierce
+  m_EditorClassIdentifier: Assembly-CSharp::PierceAbility
+  abilityName: "Pierce"
+  description: "When created by a merge, pops the smallest nearby fish (no score) to free space."
+  range: 1.2

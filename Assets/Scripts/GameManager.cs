@@ -21,19 +21,41 @@ public class GameManager : MonoBehaviour
 
     [Header("กติกา")]
     [SerializeField] private int maxDroppableTiers = 5;
+    [Tooltip("การรวมที่เกิดจาก ability ได้สูงสุดกี่ครั้งต่อการปล่อย 1 ครั้ง (กันลูปไม่จบ)")]
+    [SerializeField] private int maxChainMergesPerDrop = 20;
+    [Tooltip("จำนวนปลาตัวถัดไปที่แสดงได้มากที่สุด (รวมตัวปกติ 1 ตัว)")]
+    [SerializeField] private int maxUpcomingPreviews = 4;
 
     public event Action<int> ScoreChanged;
     public event Action GameEnded;
-    public event Action<Vector2> TopMerged;   // ไว้ใส่เอฟเฟกต์/เสียงทีหลัง
+    public event Action<Vector2> TopMerged;               // ไว้ใส่เอฟเฟกต์/เสียงทีหลัง
+    public event Action<MergeContext, int> Merged;        // ctx, คะแนนที่ได้จริง
+    public event Action UpcomingChanged;
+    public event Action<FishAbility, Vector2> AbilityTriggered;   // ไว้ใส่ VFX/SFX ของ ability
 
     private List<FishData> deck;
     private int mergeCount;
     private int topMergeCount;
-    public GameResult Result { get; private set; }
+    private int bonusCoins;
+    private int chainMergesThisDrop;
 
+    private readonly List<Fish> activeFish = new List<Fish>();
+    private readonly List<int> upcoming = new List<int>();
+    private readonly Dictionary<FishAbility, TimedMultiplier> timedMultipliers =
+        new Dictionary<FishAbility, TimedMultiplier>();
+
+    private struct TimedMultiplier
+    {
+        public float multiplier;
+        public float endTime;
+    }
+
+    public GameResult Result { get; private set; }
     public IReadOnlyList<FishData> Deck => deck;
+    public IReadOnlyList<Fish> ActiveFish => activeFish;
     public int Score { get; private set; }
     public bool IsGameOver { get; private set; }
+    public int BonusCoins => bonusCoins;
 
     public int DroppableTierCount =>
         Mathf.Clamp(deck.Count - 1, 1, maxDroppableTiers);
@@ -48,10 +70,11 @@ public class GameManager : MonoBehaviour
             : DeckFromProfileOrDefault();
 
         deck = new List<FishData>(source);
+        deck.Sort((x, y) => x.layer.CompareTo(y.layer));   // tier i = layer i+1 เสมอ
 
         if (deck.Count < GameSession.MinDeck || deck.Count > GameSession.MaxDeck)
         {
-            Debug.LogError("[GameManager] Deck ต้องมี 1-7 ตัว (ตรวจ Default Deck ใน Inspector)");
+            Debug.LogError($"[GameManager] Deck ต้องมี {GameSession.MinDeck} ตัวพอดี (ตรวจ Default Deck ใน Inspector)");
         }
     }
 
@@ -79,9 +102,64 @@ public class GameManager : MonoBehaviour
         return UnityEngine.Random.Range(0, DroppableTierCount);
     }
 
+    // ---------------------------------------------------------------- Upcoming queue
+
+    private void FillUpcoming()
+    {
+        while (upcoming.Count < maxUpcomingPreviews)
+        {
+            upcoming.Add(RollTier());
+        }
+    }
+
+    /// index 0 = ตัวถัดไปที่จะได้ถือ
+    public int PeekUpcoming(int index)
+    {
+        FillUpcoming();
+        return upcoming[Mathf.Clamp(index, 0, upcoming.Count - 1)];
+    }
+
+    public int TakeNextTier()
+    {
+        FillUpcoming();
+        int tier = upcoming[0];
+        upcoming.RemoveAt(0);
+        FillUpcoming();
+        UpcomingChanged?.Invoke();
+        return tier;
+    }
+
+    public void SetUpcoming(int index, int tier)
+    {
+        FillUpcoming();
+        if (index < 0 || index >= upcoming.Count) return;
+        upcoming[index] = Mathf.Clamp(tier, 0, deck.Count - 1);
+        UpcomingChanged?.Invoke();
+    }
+
+    /// จำนวนปลาตัวถัดไปที่ HUD ควรแสดง (1 + โบนัสจาก ability เช่น Angelfish)
+    public int UpcomingPreviewCount
+    {
+        get
+        {
+            int extra = 0;
+            foreach (Fish f in activeFish)
+            {
+                if (f != null && f.IsInPlay && f.Ability != null)
+                {
+                    extra += f.Ability.ExtraUpcomingPreviews;
+                }
+            }
+            return Mathf.Clamp(1 + extra, 1, maxUpcomingPreviews);
+        }
+    }
+
+    // ---------------------------------------------------------------- Fish lifecycle
+
     public Fish SpawnFish(int tier, Vector2 position, bool held)
     {
         Fish fish = Instantiate(fishPrefab, position, Quaternion.identity, fishParent);
+        activeFish.Add(fish);
         fish.Init(deck[tier], tier, DiameterForTier(tier), held);
 
         if (!held)
@@ -93,44 +171,162 @@ public class GameManager : MonoBehaviour
         return fish;
     }
 
-    public void MergeFish(Fish a, Fish b)
+    public void UnregisterFish(Fish fish)
+    {
+        activeFish.Remove(fish);
+    }
+
+    /// เรียกจาก FishDropper ทุกครั้งที่ผู้เล่นปล่อยปลา
+    public void NotifyDropped()
+    {
+        chainMergesThisDrop = 0;
+    }
+
+    /// ลบปลาออกจากโหลทันที (ไม่ได้คะแนน) เช่น Swordfish Pierce
+    public void RemoveFish(Fish fish)
+    {
+        if (fish == null || fish.IsMerged) return;
+        fish.MarkMerged();
+        fish.gameObject.SetActive(false);
+        Destroy(fish.gameObject);
+    }
+
+    // ---------------------------------------------------------------- Merge
+
+    public bool CanMerge(Fish a, Fish b)
+    {
+        if (a == null || b == null || a == b) return false;
+        if (a.Tier == b.Tier) return true;
+
+        return (a.Ability != null && a.Ability.CanMergeWith(a, b)) ||
+               (b.Ability != null && b.Ability.CanMergeWith(b, a));
+    }
+
+    /// การรวมที่ ability สั่ง (เช่น Chain Zap) นับเป็นการรวมปกติ แต่ติดเพดานต่อการปล่อย 1 ครั้ง
+    public bool TryAbilityMerge(Fish a, Fish b)
+    {
+        if (IsGameOver || a == null || b == null) return false;
+        if (!a.IsInPlay || !b.IsInPlay) return false;
+        if (chainMergesThisDrop >= maxChainMergesPerDrop) return false;
+        if (!CanMerge(a, b)) return false;
+
+        MergeFish(a, b, true);
+        return true;
+    }
+
+    public void MergeFish(Fish a, Fish b, bool causedByAbility)
     {
         if (IsGameOver) return;
 
-        int tier = a.Tier;
-        Vector2 mid = (a.transform.position + b.transform.position) * 0.5f;
-        FishAbility mergeAbility = a.Data.ability;
+        a.MarkMerged();
+        b.MarkMerged();
+        if (causedByAbility) chainMergesThisDrop++;
+
+        // รวมต่าง tier (Snakehead) → ได้ tier ถัดไปของตัวที่ใหญ่กว่า
+        int highTier = Mathf.Max(a.Tier, b.Tier);
+        int resultTier = highTier + 1;
+        bool isTop = resultTier >= deck.Count;
+        int n = highTier + 1;
+
+        MergeContext ctx = new MergeContext
+        {
+            a = a,
+            b = b,
+            position = (a.transform.position + b.transform.position) * 0.5f,
+            resultTier = resultTier,
+            isTopMerge = isTop,
+            causedByAbility = causedByAbility,
+            baseScore = 5 * n * (n + 1),   // layer1=10, 2=30, 3=60, 4=100 ...
+        };
+
+        if (isTop) ctx.multiplier *= 2f;
+
+        // effect ที่ทำงานอยู่ คำนวณก่อน hook เพื่อให้ Betta ไม่บูสต์การรวมที่เพิ่งเปิดมันเอง
+        ctx.multiplier *= ActiveTimedMultiplier();
+
+        // On Merge (score): ability ของคู่ที่รวม — ตัวละครั้ง (คู่ชนิดเดียวกัน = ครั้งเดียว)
+        FishAbility abA = a.Ability;
+        FishAbility abB = b.Ability;
+        if (abA != null) abA.OnMergeScore(a, ctx, this);
+        if (abB != null && abB != abA) abB.OnMergeScore(b, ctx, this);
 
         a.gameObject.SetActive(false);
         b.gameObject.SetActive(false);
         Destroy(a.gameObject);
         Destroy(b.gameObject);
 
-        bool isTop = tier + 1 >= deck.Count;
-
-        int baseScore = (tier + 1) * (tier + 2) * 5;   // tier0=10, 1=30, 2=60, 3=100 ...
-        if (isTop) baseScore *= 2;
-
-        int gained = mergeAbility != null
-            ? mergeAbility.ModifyMergeScore(baseScore)
-            : baseScore;
-
+        int gained = Mathf.RoundToInt(ctx.baseScore * ctx.multiplier);
         AddScore(gained);
+        bonusCoins += ctx.bonusCoins;
         mergeCount++;
+        Merged?.Invoke(ctx, gained);
 
         if (isTop)
         {
             topMergeCount++;
-            TopMerged?.Invoke(mid);
+            TopMerged?.Invoke(ctx.position);
             return;
         }
 
-        Fish created = SpawnFish(tier + 1, mid, false);
-        if (created.Data.ability != null)
+        // ปลาใหม่เกิด → OnSpawned (ใน Init) → On Merge (created)
+        Fish created = SpawnFish(resultTier, ctx.position, false);
+        if (created.Ability != null)
         {
-            created.Data.ability.OnMerged(created, this);
+            created.Ability.OnMergeCreated(created, this);
         }
     }
+
+    // ---------------------------------------------------------------- Timed effects
+
+    /// เริ่ม/รีเฟรช ตัวคูณคะแนนชั่วคราว (เรียกซ้ำ = รีเฟรชเวลาเต็ม ไม่บวกเวลา)
+    public void StartTimedMultiplier(FishAbility source, float multiplier, float duration)
+    {
+        timedMultipliers[source] = new TimedMultiplier
+        {
+            multiplier = multiplier,
+            endTime = Time.time + duration,
+        };
+    }
+
+    public float ActiveTimedMultiplier()
+    {
+        float m = 1f;
+        foreach (TimedMultiplier t in timedMultipliers.Values)
+        {
+            if (Time.time < t.endTime) m *= t.multiplier;
+        }
+        return m;
+    }
+
+    /// เวลาที่เหลือของ effect (0 = ไม่ทำงาน) ไว้ให้ HUD แสดง
+    public float TimedMultiplierRemaining(FishAbility source)
+    {
+        return timedMultipliers.TryGetValue(source, out TimedMultiplier t)
+            ? Mathf.Max(0f, t.endTime - Time.time)
+            : 0f;
+    }
+
+    public void RaiseAbilityTriggered(FishAbility ability, Vector2 position)
+    {
+        AbilityTriggered?.Invoke(ability, position);
+    }
+
+    // ---------------------------------------------------------------- Helpers for abilities
+
+    /// ปลาที่อยู่ในโหล (ปล่อยแล้ว) ที่ขอบตัวอยู่ภายในรัศมี
+    public List<Fish> FishInRadius(Vector2 center, float radius, Fish exclude = null)
+    {
+        List<Fish> result = new List<Fish>();
+        foreach (Fish f in activeFish)
+        {
+            if (f == null || f == exclude || !f.IsInPlay) continue;
+            float dist = Vector2.Distance(center, f.Body.position) - f.Radius;
+            if (dist <= radius) result.Add(f);
+        }
+        return result;
+    }
+
+    // ---------------------------------------------------------------- Score & flow
 
     public void AddScore(int amount)
     {
@@ -142,7 +338,7 @@ public class GameManager : MonoBehaviour
     {
         if (IsGameOver) return;
         IsGameOver = true;
-        Result = ProgressService.RecordGame(Score, mergeCount, topMergeCount);
+        Result = ProgressService.RecordGame(Score, mergeCount, topMergeCount, bonusCoins);
         GameEnded?.Invoke();
     }
 

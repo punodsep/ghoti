@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -17,18 +16,13 @@ public class FishDropper : MonoBehaviour
 
     private Camera cam;
     private Fish held;
-    private int nextTier;
     private float currentX;
     private bool ready;
     private bool dragging;
 
-    public event Action<int> NextTierChanged;
-    public int NextTier => nextTier;
-
     private void Start()
     {
         cam = Camera.main;
-        nextTier = GameManager.Instance.RollTier();
         SpawnHeld();
     }
 
@@ -82,6 +76,7 @@ public class FishDropper : MonoBehaviour
     {
         held.Release();
         held = null;
+        GameManager.Instance.NotifyDropped();
         ready = false;
         StartCoroutine(CooldownThenSpawn());
     }
@@ -97,11 +92,8 @@ public class FishDropper : MonoBehaviour
     {
         GameManager gm = GameManager.Instance;
 
-        held = gm.SpawnFish(nextTier, new Vector2(currentX, spawnY), true);
+        held = gm.SpawnFish(gm.TakeNextTier(), new Vector2(currentX, spawnY), true);
         SetX(currentX);
-
-        nextTier = gm.RollTier();
-        NextTierChanged?.Invoke(nextTier);
         ready = true;
     }
 

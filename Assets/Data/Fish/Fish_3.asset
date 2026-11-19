@@ -13,11 +13,14 @@ MonoBehaviour:
   m_Name: Fish_3
   m_EditorClassIdentifier: Assembly-CSharp::FishData
   id: Fish_3
-  displayName: Fish_3
-  sprite: {fileID: -172460223263894923, guid: 0e5f56414d5c14e669bbafd38a45ad7a, type: 3}
+  displayName: Catfish
+  sprite: {fileID: 21300000, guid: 7a09ab7de7454a7ca244b03cfa7d4e46, type: 3}
   rarity: 0
-  ability: {fileID: 11400000, guid: 88f389c19e616b947b87b1427f55a1e4, type: 2}
+  ability: {fileID: 0}
   unlockType: 0
   unlockHint: 
   questType: 0
   questTarget: 0
+  layer: 3
+  hitboxRadius: 0.3206
+  hitboxOffset: {x: -0.002, y: 0.0051}

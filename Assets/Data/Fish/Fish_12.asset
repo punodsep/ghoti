@@ -13,12 +13,15 @@ MonoBehaviour:
   m_Name: Fish_12
   m_EditorClassIdentifier: Assembly-CSharp::FishData
   id: Fish_12
-  displayName: Fish_12
-  sprite: {fileID: 5278781536924358705, guid: 6fa6673c15e05410da95cebffbeba0a5, type: 3}
+  displayName: Arowana
+  sprite: {fileID: 21300000, guid: 361fe3237e31495d8baef2bac8bc2d30, type: 3}
   rarity: 2
-  ability: {fileID: 11400000, guid: b083c43a1592dd3458f920bc8e492e64, type: 2}
+  ability: {fileID: 11400000, guid: b45f29a0691a4683aa99f8cb845810c6, type: 2}
   unlockType: 1
   unlockHint: "\u0E17\u0E33\u0E04\u0E30\u0E41\u0E19\u0E19\u0E43\u0E19\u0E40\u0E01\u0E21\u0E40\u0E14\u0E35\u0E22\u0E27\u0E43\u0E2B\u0E49\u0E16\u0E36\u0E07
     10,000"
   questType: 0
   questTarget: 10000
+  layer: 6
+  hitboxRadius: 0.3146
+  hitboxOffset: {x: -0.0204, y: 0.0062}

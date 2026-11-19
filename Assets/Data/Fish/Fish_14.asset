@@ -13,11 +13,14 @@ MonoBehaviour:
   m_Name: Fish_14
   m_EditorClassIdentifier: Assembly-CSharp::FishData
   id: Fish_14
-  displayName: Fish_14
-  sprite: {fileID: 5278781536924358705, guid: 6fa6673c15e05410da95cebffbeba0a5, type: 3}
+  displayName: Sardine
+  sprite: {fileID: 21300000, guid: 46c577666c054f9ba81aa4957973456c, type: 3}
   rarity: 0
-  ability: {fileID: 11400000, guid: b083c43a1592dd3458f920bc8e492e64, type: 2}
+  ability: {fileID: 11400000, guid: aba8c541566240a9854110aa16c48395, type: 2}
   unlockType: 2
   unlockHint: 
   questType: 0
   questTarget: 0
+  layer: 1
+  hitboxRadius: 0.2786
+  hitboxOffset: {x: -0.0052, y: 0.0062}

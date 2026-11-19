@@ -22,6 +22,9 @@ public class PlayerProfile
 
     public bool IsUnlocked(string id) => unlockedFishIds.Contains(id);
 
+    /// Deck ครบทุก layer (ไม่มีช่องว่าง) พร้อมเล่น
+    public bool IsDeckComplete => GetDeck().Count == GameSession.MaxDeck;
+
     /// คืน true ถ้าเป็นการปลดล็อกครั้งแรก
     public bool Unlock(string id)
     {

@@ -13,11 +13,14 @@ MonoBehaviour:
   m_Name: Fish_10
   m_EditorClassIdentifier: Assembly-CSharp::FishData
   id: Fish_10
-  displayName: Fish_10
-  sprite: {fileID: 5278781536924358705, guid: 6fa6673c15e05410da95cebffbeba0a5, type: 3}
+  displayName: Snakehead
+  sprite: {fileID: 21300000, guid: ad81c0082f5942eab4ad8f2ec5b9a94c, type: 3}
   rarity: 2
-  ability: {fileID: 11400000, guid: b083c43a1592dd3458f920bc8e492e64, type: 2}
+  ability: {fileID: 11400000, guid: 2a30143a35a54bb191b5ec4f99e8403d, type: 2}
   unlockType: 1
   unlockHint: "\u0E40\u0E25\u0E48\u0E19\u0E43\u0E2B\u0E49\u0E04\u0E23\u0E1A 15 \u0E40\u0E01\u0E21"
   questType: 2
   questTarget: 15
+  layer: 4
+  hitboxRadius: 0.3126
+  hitboxOffset: {x: -0.017, y: 0.0064}
