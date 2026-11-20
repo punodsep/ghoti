@@ -62,6 +62,9 @@ public class Fish : MonoBehaviour
         circle.radius = diameter * 0.5f;
         circle.offset = Vector2.zero;
 
+        // ปลาใหญ่หนักกว่า (ตามพื้นที่) → ดันปลาเล็กออกได้แบบ Suika
+        Body.mass = Mathf.Max(0.05f, diameter * diameter);
+
         if (held)
         {
             Body.simulated = false;   // ถือค้างอยู่: ไม่ชน ไม่ตก

@@ -1728,9 +1728,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: b8878f7f0ba097c4f9102c0e99f9883c, type: 2}
   - {fileID: 11400000, guid: c753aef6aa886d044a632509b237ed60, type: 2}
   - {fileID: 11400000, guid: ca3a20d9d3cad78488a557c8d8cd233b, type: 2}
-  minDiameter: 0.7
+  minDiameter: 0.45
   maxDiameter: 2.6
-  maxDroppableTiers: 5
 --- !u!4 &1475751234
 Transform:
   m_ObjectHideFlags: 0

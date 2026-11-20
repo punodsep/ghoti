@@ -16,11 +16,14 @@ public class GameManager : MonoBehaviour
     [SerializeField] private List<FishData> defaultDeck = new List<FishData>();
 
     [Header("ขนาดปลา (เส้นผ่านศูนย์กลาง)")]
-    [SerializeField] private float minDiameter = 0.7f;
+    [SerializeField] private float minDiameter = 0.45f;
     [SerializeField] private float maxDiameter = 2.6f;
 
     [Header("กติกา")]
-    [SerializeField] private int maxDroppableTiers = 5;
+    [Tooltip("น้ำหนักสุ่มของแต่ละ layer (ช่อง 0 = layer 1) ก่อนผู้เล่นเคยมีปลา layer นั้นในโหลเกมนี้")]
+    [SerializeField] private float[] dropWeightsLocked = { 30f, 30f, 25f, 15f, 1.5f, 0.5f, 0f };
+    [Tooltip("น้ำหนักสุ่มหลังจากเคยมีปลา layer นั้นในโหลแล้ว (เกิดจากการรวมหรือสุ่มได้)")]
+    [SerializeField] private float[] dropWeightsReached = { 30f, 30f, 25f, 15f, 5f, 3f, 0.5f };
     [Tooltip("การรวมที่เกิดจาก ability ได้สูงสุดกี่ครั้งต่อการปล่อย 1 ครั้ง (กันลูปไม่จบ)")]
     [SerializeField] private int maxChainMergesPerDrop = 20;
     [Tooltip("จำนวนปลาตัวถัดไปที่แสดงได้มากที่สุด (รวมตัวปกติ 1 ตัว)")]
@@ -57,8 +60,8 @@ public class GameManager : MonoBehaviour
     public bool IsGameOver { get; private set; }
     public int BonusCoins => bonusCoins;
 
-    public int DroppableTierCount =>
-        Mathf.Clamp(deck.Count - 1, 1, maxDroppableTiers);
+    /// layer สูงสุด (index) ที่เคยมีในโหลเกมนี้ — ใช้ปลดน้ำหนักสุ่ม
+    public int HighestTierReached { get; private set; } = -1;
 
     private void Awake()
     {
@@ -94,12 +97,30 @@ public class GameManager : MonoBehaviour
     public float DiameterForTier(int tier)
     {
         float t = deck.Count <= 1 ? 0f : (float)tier / (deck.Count - 1);
-        return Mathf.Lerp(minDiameter, maxDiameter, t);
+        // โตเป็นอัตราส่วนเท่ากันทุกขั้น (แบบ Suika) ไม่ใช่บวกเท่ากันทุกขั้น
+        return minDiameter * Mathf.Pow(maxDiameter / minDiameter, t);
     }
 
     public int RollTier()
     {
-        return UnityEngine.Random.Range(0, DroppableTierCount);
+        // สุ่มแบบถ่วงน้ำหนัก: layer 1-4 ออกบ่อย, 5-6 แทบไม่ออกจนกว่าจะเคยมีในโหล, 7 ออกไม่ได้เลยจนกว่าจะเคยมี
+        float total = 0f;
+        for (int t = 0; t < deck.Count; t++) total += DropWeight(t);
+        if (total <= 0f) return 0;
+
+        float roll = UnityEngine.Random.value * total;
+        for (int t = 0; t < deck.Count; t++)
+        {
+            roll -= DropWeight(t);
+            if (roll < 0f) return t;
+        }
+        return 0;
+    }
+
+    public float DropWeight(int tier)
+    {
+        float[] w = tier <= HighestTierReached ? dropWeightsReached : dropWeightsLocked;
+        return w != null && tier >= 0 && tier < w.Length ? Mathf.Max(0f, w[tier]) : 0f;
     }
 
     // ---------------------------------------------------------------- Upcoming queue
@@ -161,6 +182,7 @@ public class GameManager : MonoBehaviour
         Fish fish = Instantiate(fishPrefab, position, Quaternion.identity, fishParent);
         activeFish.Add(fish);
         fish.Init(deck[tier], tier, DiameterForTier(tier), held);
+        if (tier > HighestTierReached) HighestTierReached = tier;
 
         if (!held)
         {
